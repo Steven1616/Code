@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SchoolMarket — Predict Your School</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f12;
+    --surface: #161a1f;
+    --surface2: #1e2329;
+    --surface3: #252b33;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8eaed;
+    --text-muted: #8b919c;
+    --text-dim: #545b65;
+    --accent: #00c98d;
+    --accent-dim: rgba(0,201,141,0.12);
+    --accent-hover: #00e8a3;
+    --red: #ff5a5a;
+    --red-dim: rgba(255,90,90,0.12);
+    --yellow: #f5c842;
+    --blue: #4da6ff;
+    --blue-dim: rgba(77,166,255,0.12);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-pill: 999px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* HEADER */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(13,15,18,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+
+  .logo-icon {
+    width: 30px;
+    height: 30px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .balance-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-pill);
+    padding: 6px 14px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .balance-pill::before {
+    content: "◈";
+    font-size: 11px;
+  }
+
+  /* NAV TABS */
+  nav {
+    display: flex;
+    gap: 4px;
+    padding: 16px 24px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab {
+    padding: 10px 18px;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border: none;
+    background: none;
+    transition: color 0.15s;
+    position: relative;
+    bottom: -1px;
+  }
+
+  .tab:hover { color: var(--text); }
+
+  .tab.active {
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-bottom: 1px solid var(--surface);
+  }
+
+  /* MAIN LAYOUT */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 24px;
+  }
+
+  /* FILTER BAR */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    align-items: center;
+  }
+
+  .filter-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+
+  .chip {
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  .chip.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* MARKETS GRID */
+  .markets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+
+  .market-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .market-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .market-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-1px);
+  }
+
+  .market-card:hover::before { opacity: 1; }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    gap: 10px;
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .category-badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .badge-teachers { background: var(--blue-dim); color: var(--blue); }
+  .badge-assignments { background: rgba(245,200,66,0.12); color: var(--yellow); }
+  .badge-events { background: var(--accent-dim); color: var(--accent); }
+  .badge-grades { background: rgba(255,90,90,0.1); color: var(--red); }
+
+  .badge-resolved-yes { background: var(--accent-dim); color: var(--accent); }
+  .badge-resolved-no { background: var(--red-dim); color: var(--red); }
+
+  .market-card.resolved {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .market-card.resolved .card-footer { opacity: 0.5; }
+
+  .resolved-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface3);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    margin-top: 10px;
+    font-size: 13px;
+  }
+
+  .resolved-banner .res-outcome {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .resolved-banner .res-outcome.yes { color: var(--accent); }
+  .resolved-banner .res-outcome.no { color: var(--red); }
+  .resolved-banner .res-label { color: var(--text-dim); font-size: 12px; }
+
+  .btn-resolve {
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text-muted);
+    transition: all 0.12s;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-resolve:hover { border-color: var(--yellow); color: var(--yellow); background: rgba(245,200,66,0.08); }
+
+  /* RESOLVE MODAL */
+  .resolve-choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .resolve-btn {
+    padding: 18px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .resolve-btn .res-big { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
+  .resolve-btn .res-sub { font-size: 12px; color: var(--text-muted); }
+
+  .resolve-btn.yes:hover, .resolve-btn.yes.selected {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+  }
+  .resolve-btn.yes:hover .res-big, .resolve-btn.yes.selected .res-big { color: var(--accent); }
+
+  .resolve-btn.no:hover, .resolve-btn.no.selected {
+    background: var(--red-dim);
+    border-color: var(--red);
+  }
+  .resolve-btn.no:hover .res-big, .resolve-btn.no.selected .res-big { color: var(--red); }
+
+  .btn-confirm.resolve-confirm { background: var(--yellow); color: #000; }
+
+  /* PROBABILITY BAR */
+  .prob-section {
+    margin: 14px 0;
+  }
+
+  .prob-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .prob-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .prob-bar-track {
+    height: 6px;
+    background: var(--surface3);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+  }
+
+  .prob-bar-fill {
+    height: 100%;
+    border-radius: var(--radius-pill);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .fill-yes { background: var(--accent); }
+  .fill-no { background: var(--red); }
+
+  .prob-value {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .prob-value.high { color: var(--accent); }
+  .prob-value.medium { color: var(--yellow); }
+  .prob-value.low { color: var(--red); }
+
+  .prob-change {
+    font-size: 12px;
+    font-family: var(--mono);
+  }
+
+  .prob-change.up { color: var(--accent); }
+  .prob-change.down { color: var(--red); }
+  .prob-change.flat { color: var(--text-dim); }
+
+  /* CARD FOOTER */
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    margin-top: 12px;
+  }
+
+  .meta-item {
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .meta-icon { font-size: 11px; }
+
+  .trade-btns {
+    display: flex;
+    gap: 6px;
+  }
+
+  .btn-yes, .btn-no {
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.12s;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-yes {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .btn-yes:hover { background: var(--accent); color: #000; }
+
+  .btn-no {
+    background: var(--red-dim);
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  .btn-no:hover { background: var(--red); color: #fff; }
+
+  /* MODAL OVERLAY */
+  .modal-overlay {
+    position: absolute;
+    inset: 0;
+    min-height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 80px 20px 40px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 460px;
+    padding: 28px;
+    transform: translateY(10px);
+    transition: transform 0.2s;
+  }
+
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-close {
+    position: absolute;
+    top: 20px; right: 20px;
+    background: var(--surface3);
+    border: none;
+    color: var(--text-muted);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal { position: relative; }
+
+  .modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    padding-right: 36px;
+    line-height: 1.3;
+  }
+
+  .modal-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+
+  .modal-prob-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .prob-stat {
+    text-align: center;
+  }
+
+  .prob-stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .prob-stat-value { font-family: var(--mono); font-size: 20px; font-weight: 500; }
+  .prob-stat-value.yes { color: var(--accent); }
+  .prob-stat-value.no { color: var(--red); }
+
+  .divider { width: 1px; height: 36px; background: var(--border2); }
+
+  /* TRADE FORM */
+  .trade-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .toggle-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+
+  .toggle-btn.yes.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .toggle-btn.no.active { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+
+  .form-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .shares-input-wrapper {
+    display: flex;
+    align-items: center;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+
+  .shares-input-wrapper:focus-within { border-color: var(--accent); }
+
+  .shares-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 16px;
+    padding: 12px 14px;
+  }
+
+  .shares-unit {
+    padding: 0 14px;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  .stepper-btns {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--border);
+  }
+
+  .step-btn {
+    width: 34px;
+    height: 22px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 11px;
+    transition: background 0.1s;
+  }
+
+  .step-btn:hover { background: var(--surface3); color: var(--text); }
+
+  .cost-summary {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+
+  .cost-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    padding: 3px 0;
+  }
+
+  .cost-row span:first-child { color: var(--text-muted); }
+  .cost-row span:last-child { font-family: var(--mono); color: var(--text); }
+  .cost-row.total { padding-top: 8px; margin-top: 4px; border-top: 1px solid var(--border); }
+  .cost-row.total span { font-weight: 500; font-size: 14px; }
+
+  .btn-confirm {
+    width: 100%;
+    padding: 13px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    letter-spacing: 0.2px;
+  }
+
+  .btn-confirm.yes { background: var(--accent); color: #000; }
+  .btn-confirm.no { background: var(--red); color: #fff; }
+  .btn-confirm.sell { background: var(--yellow); color: #000; }
+  .btn-confirm:hover { opacity: 0.88; }
+  .btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .sell-info-bar {
+    background: rgba(245,200,66,0.08);
+    border: 1px solid rgba(245,200,66,0.2);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--yellow);
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .sell-info-bar span:last-child {
+    font-family: var(--mono);
+    font-weight: 500;
+  }
+
+  .btn-sell-position {
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid rgba(245,200,66,0.4);
+    background: rgba(245,200,66,0.08);
+    color: var(--yellow);
+    transition: all 0.12s;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+  }
+
+  .btn-sell-position:hover { background: var(--yellow); color: #000; }
+
+  .error-msg {
+    font-size: 12px;
+    color: var(--red);
+    text-align: center;
+    margin-bottom: 10px;
+    min-height: 16px;
+  }
+
+  /* PORTFOLIO TAB */
+  .portfolio-header {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+
+  .stat-label { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-value { font-family: var(--mono); font-size: 22px; font-weight: 500; }
+  .stat-value.green { color: var(--accent); }
+  .stat-value.red { color: var(--red); }
+
+  .positions-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 12px;
+  }
+
+  .position-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .position-side {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+
+  .side-yes { background: var(--accent-dim); color: var(--accent); }
+  .side-no { background: var(--red-dim); color: var(--red); }
+
+  .position-info { flex: 1; min-width: 0; }
+  .position-title { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .position-meta { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+
+  .position-pnl { text-align: right; flex-shrink: 0; }
+  .pnl-value { font-family: var(--mono); font-size: 15px; font-weight: 500; }
+  .pnl-shares { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+  }
+
+  .empty-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.4; }
+  .empty-text { font-size: 15px; }
+  .empty-sub { font-size: 13px; margin-top: 6px; color: var(--text-dim); opacity: 0.7; }
+
+  /* TOAST */
+  .toast {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-size: 14px;
+    color: var(--text);
+    z-index: 999;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.3s;
+    max-width: 300px;
+    pointer-events: none;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; pointer-events: all; }
+  .toast .toast-title { font-weight: 600; margin-bottom: 3px; }
+  .toast .toast-body { color: var(--text-muted); font-size: 13px; }
+  .toast.success .toast-title { color: var(--accent); }
+  .toast.error .toast-title { color: var(--red); }
+
+  /* SECTION DIVIDER */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0 20px;
+  }
+
+  .section-divider span { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.6px; white-space: nowrap; }
+  .section-divider::before, .section-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  @media (max-width: 600px) {
+    main { padding: 20px 16px; }
+    header { padding: 0 16px; }
+    nav { padding: 14px 16px 0; }
+    .portfolio-header { grid-template-columns: 1fr 1fr; }
+    .markets-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div id="app" style="position:relative; min-height:100vh; overflow:hidden;">
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">📊</div>
+    School<span>Market</span>
+  </div>
+  <div class="header-right">
+    <div class="balance-pill" id="balance-display">1,000 credits</div>
+  </div>
+</header>
+
+<nav>
+  <button class="tab active" onclick="switchTab('markets')">Markets</button>
+  <button class="tab" onclick="switchTab('portfolio')">Portfolio</button>
+</nav>
+
+<main>
+  <div id="tab-markets">
+    <div class="filter-bar">
+      <span class="filter-label">Filter</span>
+      <button class="chip active" onclick="filterMarkets('all', this)">All</button>
+      <button class="chip" onclick="filterMarkets('teachers', this)">Teachers</button>
+      <button class="chip" onclick="filterMarkets('assignments', this)">Assignments</button>
+      <button class="chip" onclick="filterMarkets('events', this)">Events</button>
+      <button class="chip" onclick="filterMarkets('grades', this)">Grades</button>
+    </div>
+    <div class="markets-grid" id="markets-grid"></div>
+  </div>
+
+  <div id="tab-portfolio" style="display:none">
+    <div class="portfolio-header">
+      <div class="stat-card">
+        <div class="stat-label">Cash Balance</div>
+        <div class="stat-value green" id="port-balance">1,000</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Open Positions</div>
+        <div class="stat-value" id="port-positions">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Unrealized P&L</div>
+        <div class="stat-value" id="port-pnl">+0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Realized P&L</div>
+        <div class="stat-value" id="port-realized-pnl">+0</div>
+      </div>
+    </div>
+    <div class="positions-title">Your Positions</div>
+    <div id="positions-list"></div>
+  </div>
+</main>
+
+<!-- TRADE MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div class="modal-title" id="modal-title">Market Title</div>
+    <div class="modal-subtitle" id="modal-subtitle">Category • Closes Jan 2025</div>
+
+    <div class="modal-prob-display">
+      <div class="prob-stat">
+        <div class="prob-stat-label">YES probability</div>
+        <div class="prob-stat-value yes" id="modal-yes-prob">—</div>
+      </div>
+      <div class="divider"></div>
+      <div class="prob-stat">
+        <div class="prob-stat-label">NO probability</div>
+        <div class="prob-stat-value no" id="modal-no-prob">—</div>
+      </div>
+    </div>
+
+    <div class="trade-toggle" id="modal-trade-toggle">
+      <button class="toggle-btn yes active" id="toggle-yes" onclick="setSide('yes')">YES</button>
+      <button class="toggle-btn no" id="toggle-no" onclick="setSide('no')">NO</button>
+    </div>
+
+    <div class="sell-info-bar" id="sell-info-bar" style="display:none">
+      <span>Shares you own</span>
+      <span id="sell-max-shares">0</span>
+    </div>
+
+    <label class="form-label" id="shares-label">Number of shares</label>
+    <div class="shares-input-wrapper">
+      <input type="number" class="shares-input" id="shares-input" value="10" min="1" max="500" oninput="updateCost()">
+      <span class="shares-unit">shares</span>
+      <div class="stepper-btns">
+        <button class="step-btn" onclick="stepShares(10)">▲</button>
+        <button class="step-btn" onclick="stepShares(-10)">▼</button>
+      </div>
+    </div>
+
+    <div class="cost-summary">
+      <div class="cost-row">
+        <span id="label-per-share">Price per share</span>
+        <span id="cost-per-share">◈ —</span>
+      </div>
+      <div class="cost-row">
+        <span>Shares</span>
+        <span id="cost-shares">—</span>
+      </div>
+      <div class="cost-row total">
+        <span id="label-total">Total cost</span>
+        <span id="cost-total">◈ —</span>
+      </div>
+    </div>
+
+    <div class="error-msg" id="error-msg"></div>
+    <button class="btn-confirm yes" id="btn-confirm" onclick="executeTrade()">Buy YES</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-title" id="toast-title"></div>
+  <div class="toast-body" id="toast-body"></div>
+</div>
+
+<!-- RESOLVE MODAL -->
+<div class="modal-overlay" id="resolve-overlay" onclick="closeResolveModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeResolveModal()">&times;</button>
+    <div class="modal-title" id="resolve-title">Resolve Market</div>
+    <div class="modal-subtitle" id="resolve-subtitle">Choose the outcome — payouts will be distributed instantly</div>
+
+    <div class="resolve-choices">
+      <div class="resolve-btn yes" id="resolve-yes-btn" onclick="selectOutcome('yes')">
+        <span class="res-big">YES</span>
+        <span class="res-sub">Event happened</span>
+      </div>
+      <div class="resolve-btn no" id="resolve-no-btn" onclick="selectOutcome('no')">
+        <span class="res-big">NO</span>
+        <span class="res-sub">Event didn't happen</span>
+      </div>
+    </div>
+
+    <div class="cost-summary" id="resolve-preview" style="margin-bottom:16px">
+      <div class="cost-row">
+        <span>YES holders payout</span>
+        <span id="res-yes-payout">—</span>
+      </div>
+      <div class="cost-row">
+        <span>NO holders payout</span>
+        <span id="res-no-payout">—</span>
+      </div>
+      <div class="cost-row total">
+        <span>Your payout</span>
+        <span id="res-your-payout" style="color:var(--accent)">—</span>
+      </div>
+    </div>
+
+    <div class="error-msg" id="resolve-error"></div>
+    <button class="btn-confirm resolve-confirm" id="btn-resolve-confirm" onclick="executeResolve()" disabled>Select an outcome</button>
+  </div>
+</div>
+
+</div><!-- #app -->
+
+<script>
+const MARKETS = [
+  {
+    id: 1, category: "teachers",
+    title: "Mr. Johnson cancels Friday's math class",
+    description: "Will Mr. Johnson cancel or be absent for Friday's scheduled math class?",
+    yesProb: 72, trend: +5, volume: 840, closes: "Fri, Jun 7"
+  },
+  {
+    id: 2, category: "assignments",
+    title: "History essay deadline gets pushed back",
+    description: "Will Ms. Carter extend the deadline for the Chapter 9 history essay?",
+    yesProb: 58, trend: +12, volume: 620, closes: "Wed, Jun 5"
+  },
+  {
+    id: 3, category: "events",
+    title: "Fire drill happens during lunch period",
+    description: "Will the scheduled fire drill fall during the lunch period this week?",
+    yesProb: 34, trend: -3, volume: 390, closes: "Fri, Jun 7"
+  },
+  {
+    id: 4, category: "grades",
+    title: "Class average on the bio test is above 80%",
+    description: "Will the class average on Friday's biology test exceed 80%?",
+    yesProb: 45, trend: 0, volume: 520, closes: "Mon, Jun 10"
+  },
+  {
+    id: 5, category: "teachers",
+    title: "Coach Rivera runs a surprise fitness test",
+    description: "Will Coach Rivera spring a surprise fitness test this week in PE?",
+    yesProb: 81, trend: +8, volume: 1020, closes: "Fri, Jun 7"
+  },
+  {
+    id: 6, category: "assignments",
+    title: "Physics lab report due date gets extended",
+    description: "Will Dr. Kim push back the physics lab report deadline by at least one day?",
+    yesProb: 29, trend: -6, volume: 460, closes: "Thu, Jun 6"
+  },
+  {
+    id: 7, category: "events",
+    title: "School assembly happens this week",
+    description: "Will there be an unplanned school-wide assembly this week?",
+    yesProb: 62, trend: +4, volume: 730, closes: "Fri, Jun 7"
+  },
+  {
+    id: 8, category: "grades",
+    title: "Spanish quiz is curved by the teacher",
+    description: "Will the teacher curve this week's Spanish vocabulary quiz?",
+    yesProb: 53, trend: -2, volume: 280, closes: "Wed, Jun 5"
+  },
+  {
+    id: 9, category: "teachers",
+    title: "Sub replaces Ms. Adams in English class",
+    description: "Will Ms. Adams be absent and replaced by a substitute this week?",
+    yesProb: 41, trend: +1, volume: 570, closes: "Fri, Jun 7"
+  },
+  {
+    id: 10, category: "events",
+    title: "Cafeteria serves pizza on Thursday",
+    description: "Will the cafeteria have pizza on the Thursday lunch menu?",
+    yesProb: 88, trend: +2, volume: 1150, closes: "Thu, Jun 6"
+  },
+  {
+    id: 11, category: "assignments",
+    title: "Group project partners are randomly assigned",
+    description: "Will Mr. Patel randomly assign partners for the upcoming science project?",
+    yesProb: 67, trend: +9, volume: 890, closes: "Mon, Jun 10"
+  },
+  {
+    id: 12, category: "events",
+    title: "Internet goes down during computer class",
+    description: "Will the school WiFi go down during at least one period of computer class this week?",
+    yesProb: 76, trend: +15, volume: 680, closes: "Fri, Jun 7"
+  }
+];
+
+let state = {
+  balance: 1000,
+  positions: {},
+  realizedPnl: 0,
+  activeMarket: null,
+  activeSide: 'yes',
+  tradeMode: 'buy',
+  filter: 'all'
+};
+
+function formatCredits(n) {
+  return n.toLocaleString('en-US');
+}
+
+function probClass(p) {
+  if (p >= 65) return 'high';
+  if (p >= 40) return 'medium';
+  return 'low';
+}
+
+function trendClass(t) {
+  if (t > 0) return 'up';
+  if (t < 0) return 'down';
+  return 'flat';
+}
+
+function trendText(t) {
+  if (t > 0) return `↑ ${t}%`;
+  if (t < 0) return `↓ ${Math.abs(t)}%`;
+  return '— 0%';
+}
+
+function badgeClass(cat) {
+  const map = { teachers: 'badge-teachers', assignments: 'badge-assignments', events: 'badge-events', grades: 'badge-grades' };
+  return map[cat] || 'badge-events';
+}
+
+function badgeLabel(cat) {
+  const map = { teachers: 'Teacher', assignments: 'Assignment', events: 'Event', grades: 'Grades' };
+  return map[cat] || cat;
+}
+
+function priceForSide(market, side) {
+  return side === 'yes' ? market.yesProb / 100 : (100 - market.yesProb) / 100;
+}
+
+function renderMarkets() {
+  const grid = document.getElementById('markets-grid');
+  const filtered = MARKETS.filter(m => state.filter === 'all' || m.category === state.filter);
+
+  grid.innerHTML = filtered.map(m => {
+    const noProb = 100 - m.yesProb;
+    const pc = probClass(m.yesProb);
+    const tc = trendClass(m.trend);
+    const isResolved = !!m.resolved;
+    const resolvedClass = isResolved ? 'resolved' : '';
+
+    const resolvedBanner = isResolved ? `
+      <div class="resolved-banner">
+        <span class="res-label">Resolved</span>
+        <span class="res-outcome ${m.resolved}">● ${m.resolved.toUpperCase()}</span>
+      </div>` : '';
+
+    const footerRight = isResolved
+      ? `<span class="category-badge badge-resolved-${m.resolved}">Resolved ${m.resolved.toUpperCase()}</span>`
+      : `<div class="trade-btns" onclick="event.stopPropagation()">
+           <button class="btn-yes" onclick="openModal(${m.id}, 'yes')">YES ${m.yesProb}¢</button>
+           <button class="btn-no" onclick="openModal(${m.id}, 'no')">NO ${noProb}¢</button>
+           <button class="btn-resolve" onclick="event.stopPropagation(); openResolveModal(${m.id})">Resolve</button>
+         </div>`;
+
+    return `
+      <div class="market-card ${resolvedClass}">
+        <div class="card-header">
+          <div class="card-title">${m.title}</div>
+          <span class="category-badge ${badgeClass(m.category)}">${badgeLabel(m.category)}</span>
+        </div>
+
+        <div class="prob-section">
+          <div class="prob-row">
+            <div class="prob-value ${pc}">${m.yesProb}%</div>
+            <span class="prob-change ${tc}">${trendText(m.trend)} today</span>
+          </div>
+          <div class="prob-labels">
+            <span>YES</span>
+            <span>NO</span>
+          </div>
+          <div class="prob-bar-track">
+            <div class="prob-bar-fill fill-yes" style="width:${m.yesProb}%"></div>
+          </div>
+        </div>
+
+        ${resolvedBanner}
+
+        <div class="card-footer">
+          <div class="meta-item">
+            <span class="meta-icon">◈</span> ${formatCredits(m.volume)} vol
+          </div>
+          <div class="meta-item">${isResolved ? 'Closed' : 'Closes ' + m.closes}</div>
+          ${footerRight}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterMarkets(cat, el) {
+  state.filter = cat;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderMarkets();
+}
+
+function openModal(id, side = 'yes') {
+  const m = MARKETS.find(x => x.id === id);
+  state.activeMarket = m;
+  state.activeSide = side;
+  state.tradeMode = 'buy';
+
+  document.getElementById('modal-title').textContent = m.title;
+  document.getElementById('modal-subtitle').textContent = `${badgeLabel(m.category)} • Closes ${m.closes}`;
+  document.getElementById('modal-yes-prob').textContent = m.yesProb + '%';
+  document.getElementById('modal-no-prob').textContent = (100 - m.yesProb) + '%';
+  document.getElementById('shares-input').value = 10;
+  document.getElementById('modal-trade-toggle').style.display = '';
+  document.getElementById('sell-info-bar').style.display = 'none';
+  document.getElementById('shares-label').textContent = 'Number of shares';
+
+  setSide(side);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function openSellModal(key) {
+  const pos = state.positions[key];
+  if (!pos) return;
+  state.activeMarket = pos.market;
+  state.activeSide = pos.side;
+  state.tradeMode = 'sell';
+  state.activeSellKey = key;
+
+  const m = pos.market;
+  document.getElementById('modal-title').textContent = m.title;
+  document.getElementById('modal-subtitle').textContent = `Sell ${pos.side.toUpperCase()} position • ${pos.shares} shares owned`;
+  document.getElementById('modal-yes-prob').textContent = m.yesProb + '%';
+  document.getElementById('modal-no-prob').textContent = (100 - m.yesProb) + '%';
+  document.getElementById('modal-trade-toggle').style.display = 'none';
+  document.getElementById('sell-info-bar').style.display = 'flex';
+  document.getElementById('sell-max-shares').textContent = pos.shares;
+  document.getElementById('shares-label').textContent = 'Shares to sell';
+  document.getElementById('shares-input').value = pos.shares;
+  document.getElementById('shares-input').max = pos.shares;
+  document.getElementById('label-per-share').textContent = 'Sale price per share';
+  document.getElementById('label-total').textContent = 'Total proceeds';
+
+  const btn = document.getElementById('btn-confirm');
+  btn.textContent = 'Sell Position';
+  btn.className = 'btn-confirm sell';
+
+  updateCost();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.getElementById('error-msg').textContent = '';
+    document.getElementById('shares-input').max = 500;
+    document.getElementById('label-per-share').textContent = 'Price per share';
+    document.getElementById('label-total').textContent = 'Total cost';
+    state.tradeMode = 'buy';
+  }
+}
+
+function setSide(side) {
+  state.activeSide = side;
+  document.getElementById('toggle-yes').classList.toggle('active', side === 'yes');
+  document.getElementById('toggle-no').classList.toggle('active', side === 'no');
+  const btn = document.getElementById('btn-confirm');
+  btn.textContent = `Buy ${side.toUpperCase()}`;
+  btn.className = `btn-confirm ${side}`;
+  updateCost();
+}
+
+function stepShares(delta) {
+  const input = document.getElementById('shares-input');
+  const val = Math.max(1, Math.min(500, (parseInt(input.value) || 0) + delta));
+  input.value = val;
+  updateCost();
+}
+
+function updateCost() {
+  const m = state.activeMarket;
+  if (!m) return;
+  const shares = parseInt(document.getElementById('shares-input').value) || 0;
+  const price = priceForSide(m, state.activeSide);
+  const total = (shares * price).toFixed(2);
+
+  document.getElementById('cost-per-share').textContent = `◈ ${price.toFixed(2)}`;
+  document.getElementById('cost-shares').textContent = shares;
+  document.getElementById('cost-total').textContent = `◈ ${formatCredits(parseFloat(total))}`;
+}
+
+function executeTrade() {
+  if (state.tradeMode === 'sell') { executeSell(); return; }
+
+  const m = state.activeMarket;
+  const shares = parseInt(document.getElementById('shares-input').value) || 0;
+  const price = priceForSide(m, state.activeSide);
+  const cost = shares * price;
+  const errEl = document.getElementById('error-msg');
+
+  if (shares < 1) { errEl.textContent = 'Enter at least 1 share.'; return; }
+  if (cost > state.balance) { errEl.textContent = `Not enough credits. You have ◈ ${formatCredits(Math.round(state.balance))}.`; return; }
+
+  errEl.textContent = '';
+  state.balance -= cost;
+
+  const key = `${m.id}-${state.activeSide}`;
+  if (!state.positions[key]) {
+    state.positions[key] = { market: m, side: state.activeSide, shares: 0, totalCost: 0 };
+  }
+  state.positions[key].shares += shares;
+  state.positions[key].totalCost += cost;
+
+  updateBalanceDisplay();
+  closeModal();
+  showToast('success', 'Trade executed!', `Bought ${shares} ${state.activeSide.toUpperCase()} shares on "${m.title.slice(0,35)}..."`);
+  renderMarkets();
+  renderPortfolio();
+}
+
+function executeSell() {
+  const key = state.activeSellKey;
+  const pos = state.positions[key];
+  const shares = parseInt(document.getElementById('shares-input').value) || 0;
+  const errEl = document.getElementById('error-msg');
+
+  if (shares < 1) { errEl.textContent = 'Enter at least 1 share to sell.'; return; }
+  if (shares > pos.shares) { errEl.textContent = `You only own ${pos.shares} shares.`; return; }
+
+  const price = priceForSide(pos.market, pos.side);
+  const proceeds = shares * price;
+  const avgCost = pos.totalCost / pos.shares;
+  const realized = proceeds - (avgCost * shares);
+
+  state.realizedPnl += realized;
+  state.balance += proceeds;
+  pos.totalCost -= avgCost * shares;
+  pos.shares -= shares;
+
+  if (pos.shares <= 0) delete state.positions[key];
+
+  updateBalanceDisplay();
+  closeModal();
+  showToast('success', 'Position sold!', `Sold ${shares} ${pos.side.toUpperCase()} shares for ◈${proceeds.toFixed(2)}`);
+  renderMarkets();
+  renderPortfolio();
+}
+
+function updateBalanceDisplay() {
+  document.getElementById('balance-display').textContent = formatCredits(Math.round(state.balance)) + ' credits';
+}
+
+function renderPortfolio() {
+  const positions = Object.values(state.positions);
+  document.getElementById('port-balance').textContent = '◈ ' + formatCredits(Math.round(state.balance));
+  document.getElementById('port-positions').textContent = positions.length;
+
+  let totalPnl = 0;
+  positions.forEach(p => {
+    const currentPrice = priceForSide(p.market, p.side);
+    const currentValue = p.shares * currentPrice;
+    totalPnl += (currentValue - p.totalCost);
+  });
+
+  const pnlEl = document.getElementById('port-pnl');
+  pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + Math.round(totalPnl);
+  pnlEl.className = 'stat-value ' + (totalPnl >= 0 ? 'green' : 'red');
+
+  const realizedEl = document.getElementById('port-realized-pnl');
+  const rPnl = state.realizedPnl;
+  realizedEl.textContent = (rPnl >= 0 ? '+' : '') + Math.round(rPnl);
+  realizedEl.className = 'stat-value ' + (rPnl >= 0 ? 'green' : 'red');
+
+  const listEl = document.getElementById('positions-list');
+  if (positions.length === 0) {
+    listEl.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <div class="empty-text">No positions yet</div>
+        <div class="empty-sub">Head to Markets and make your first trade</div>
+      </div>`;
+    return;
+  }
+
+  listEl.innerHTML = positions.map(p => {
+    const key = `${p.market.id}-${p.side}`;
+    const avgPrice = (p.totalCost / p.shares).toFixed(2);
+    const currentPrice = priceForSide(p.market, p.side);
+    const pnl = (p.shares * currentPrice) - p.totalCost;
+    const pnlSign = pnl >= 0 ? '+' : '';
+    const pnlColor = pnl >= 0 ? 'var(--accent)' : 'var(--red)';
+
+    return `
+      <div class="position-row">
+        <span class="position-side side-${p.side}">${p.side.toUpperCase()}</span>
+        <div class="position-info">
+          <div class="position-title">${p.market.title}</div>
+          <div class="position-meta">Avg ◈${avgPrice} · Current ${Math.round(currentPrice * 100)}¢</div>
+        </div>
+        <div class="position-pnl">
+          <div class="pnl-value" style="color:${pnlColor}">${pnlSign}${Math.round(pnl)}</div>
+          <div class="pnl-shares">${p.shares} shares</div>
+        </div>
+        <button class="btn-sell-position" onclick="openSellModal('${key}')">Sell</button>
+      </div>`;
+  }).join('');
+}
+
+function switchTab(tab) {
+  document.getElementById('tab-markets').style.display = tab === 'markets' ? '' : 'none';
+  document.getElementById('tab-portfolio').style.display = tab === 'portfolio' ? '' : 'none';
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'markets') || (i === 1 && tab === 'portfolio'));
+  });
+  if (tab === 'portfolio') renderPortfolio();
+}
+
+let toastTimer;
+function showToast(type, title, body) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-body').textContent = body;
+  toast.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+// RESOLVE LOGIC
+let resolveMarketId = null;
+let resolveOutcome = null;
+
+function openResolveModal(id) {
+  const m = MARKETS.find(x => x.id === id);
+  resolveMarketId = id;
+  resolveOutcome = null;
+
+  document.getElementById('resolve-title').textContent = m.title;
+  document.getElementById('resolve-subtitle').textContent = `${badgeLabel(m.category)} • Closes ${m.closes}`;
+  document.getElementById('resolve-yes-btn').classList.remove('selected');
+  document.getElementById('resolve-no-btn').classList.remove('selected');
+  document.getElementById('btn-resolve-confirm').disabled = true;
+  document.getElementById('btn-resolve-confirm').textContent = 'Select an outcome';
+  document.getElementById('resolve-error').textContent = '';
+  document.getElementById('res-yes-payout').textContent = '—';
+  document.getElementById('res-no-payout').textContent = '—';
+  document.getElementById('res-your-payout').textContent = '—';
+
+  document.getElementById('resolve-overlay').classList.add('open');
+}
+
+function closeResolveModal(e) {
+  if (!e || e.target === document.getElementById('resolve-overlay')) {
+    document.getElementById('resolve-overlay').classList.remove('open');
+    resolveMarketId = null;
+    resolveOutcome = null;
+  }
+}
+
+function selectOutcome(outcome) {
+  resolveOutcome = outcome;
+  document.getElementById('resolve-yes-btn').classList.toggle('selected', outcome === 'yes');
+  document.getElementById('resolve-no-btn').classList.toggle('selected', outcome === 'no');
+
+  const m = MARKETS.find(x => x.id === resolveMarketId);
+
+  // Calculate payouts for preview
+  const winnerKey = `${m.id}-${outcome}`;
+  const loserKey  = `${m.id}-${outcome === 'yes' ? 'no' : 'yes'}`;
+  const winPos = state.positions[winnerKey];
+  const losPos = state.positions[loserKey];
+
+  const yesPayout = winPos && outcome === 'yes' ? `◈ ${(winPos.shares * 1).toFixed(2)}` : '◈ 0.00';
+  const noPayout  = winPos && outcome === 'no'  ? `◈ ${(winPos.shares * 1).toFixed(2)}` : '◈ 0.00';
+  const yourPayout = winPos ? winPos.shares : 0;
+
+  document.getElementById('res-yes-payout').textContent = outcome === 'yes' && winPos ? `◈ ${winPos.shares.toFixed(2)}` : '◈ 0.00';
+  document.getElementById('res-no-payout').textContent  = outcome === 'no'  && winPos ? `◈ ${winPos.shares.toFixed(2)}` : '◈ 0.00';
+  document.getElementById('res-your-payout').textContent = yourPayout > 0 ? `◈ ${yourPayout.toFixed(2)} (+${(yourPayout - (winPos ? winPos.totalCost : 0)).toFixed(2)})` : 'No position';
+  document.getElementById('res-your-payout').style.color = yourPayout > 0 ? 'var(--accent)' : 'var(--text-dim)';
+
+  const btn = document.getElementById('btn-resolve-confirm');
+  btn.disabled = false;
+  btn.textContent = `Resolve as ${outcome.toUpperCase()}`;
+}
+
+function executeResolve() {
+  if (!resolveOutcome || !resolveMarketId) return;
+
+  const m = MARKETS.find(x => x.id === resolveMarketId);
+  const outcome = resolveOutcome;
+  m.resolved = outcome;
+
+  const winKey  = `${m.id}-${outcome}`;
+  const loseKey = `${m.id}-${outcome === 'yes' ? 'no' : 'yes'}`;
+
+  let payout = 0;
+  if (state.positions[winKey]) {
+    const pos = state.positions[winKey];
+    payout = pos.shares;
+    const realized = payout - pos.totalCost;
+    state.realizedPnl += realized;
+    state.balance += payout;
+    delete state.positions[winKey];
+  }
+  if (state.positions[loseKey]) {
+    const pos = state.positions[loseKey];
+    state.realizedPnl -= pos.totalCost;
+    delete state.positions[loseKey];
+  }
+
+  updateBalanceDisplay();
+  closeResolveModal();
+
+  const msg = payout > 0
+    ? `Resolved ${outcome.toUpperCase()} — you won ◈${payout.toFixed(2)}!`
+    : `Resolved ${outcome.toUpperCase()} — no position on this side.`;
+
+  showToast(payout > 0 ? 'success' : 'error', 'Market resolved!', msg);
+  renderMarkets();
+  renderPortfolio();
+}
+
+// init
+renderMarkets();
+renderPortfolio();
+</script>
+</body>
+</html>
